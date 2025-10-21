@@ -7,6 +7,19 @@ router.get("/", async (req, res) => {
   res.json(questions);
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+    res.json(question);
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
+  }
+});
+
+
 router.post("/", async (req, res) => {
   const newQuestion = new Question(req.body);
   await newQuestion.save();

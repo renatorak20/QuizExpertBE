@@ -3,8 +3,20 @@ import Quiz from "../models/quiz.model.js";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const quizzes = await Quiz.find().populate("questions");
+  const quizzes = await Quiz.find();
   res.json(quizzes);
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const quiz = await Quiz.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+    res.json(quiz);
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
+  }
 });
 
 router.post("/", async (req, res) => {
