@@ -1,13 +1,15 @@
 import express from "express";
 import Quiz from "../models/quiz.model.js";
+import { authenticateJWT, isAdmin } from "../middleware/auth.middleware.js";
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateJWT, async (req, res) => {
   const quizzes = await Quiz.find();
   res.json(quizzes);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticateJWT, async (req, res) => {
   try {
     const quiz = await Quiz.findById(req.params.id);
     if (!quiz) {
@@ -19,18 +21,18 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authenticateJWT, isAdmin, async (req, res) => {
   const newQuiz = new Quiz(req.body);
   await newQuiz.save();
   res.status(201).json(newQuiz);
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", authenticateJWT, isAdmin, async (req, res) => {
   const updatedQuiz = await Quiz.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(updatedQuiz);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateJWT, isAdmin, async (req, res) => {
   await Quiz.findByIdAndDelete(req.params.id);
   res.json({ message: "Quiz deleted" });
 });

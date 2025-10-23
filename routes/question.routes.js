@@ -1,13 +1,15 @@
 import express from "express";
 import Question from "../models/question.model.js";
+import { authenticateJWT, isAdmin } from "../middleware/auth.middleware.js";
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateJWT, async (req, res) => {
   const questions = await Question.find();
   res.json(questions);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticateJWT, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id);
     if (!question) {
@@ -19,19 +21,18 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-router.post("/", async (req, res) => {
+router.post("/", authenticateJWT, isAdmin, async (req, res) => {
   const newQuestion = new Question(req.body);
   await newQuestion.save();
   res.status(201).json(newQuestion);
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", authenticateJWT, isAdmin, async (req, res) => {
   const updatedQuestion = await Question.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(updatedQuestion);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateJWT, isAdmin, async (req, res) => {
   await Question.findByIdAndDelete(req.params.id);
   res.json({ message: "Question deleted" });
 });

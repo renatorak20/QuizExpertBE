@@ -1,30 +1,34 @@
 import express from "express";
 import User from "../models/user.model.js";
+import { authenticateJWT, isAdmin } from "../middleware/auth.middleware.js";
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateJWT, isAdmin, async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticateJWT, isAdmin, async (req, res) => {
   const user = await User.findById(req.params.id);
   res.json(user);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authenticateJWT, isAdmin, async (req, res) => {
   const newUser = new User(req.body);
   await newUser.save();
   res.status(201).json(newUser);
 });
 
-router.patch("/:id", async (req, res) => {
-  console.log("Updating user with ID:", req.body);
-  const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
+router.patch("/:id", authenticateJWT, isAdmin, async (req, res) => {
+  if (req.params.id !== req.user._id.toString() && !req.user.isAdmin) {
+    return res.status(403).json({ message: "You can only update your own profile" });
+  }
+  const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(updatedUser);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateJWT, isAdmin, async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ message: "User deleted successfully" });
 });
