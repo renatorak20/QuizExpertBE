@@ -1,6 +1,8 @@
 import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import bcrypt from 'bcryptjs';
+import User from "../models/user.model.js";
 
 export const authRouter = express.Router();
 
@@ -34,6 +36,28 @@ authRouter.get(
     res.redirect(`${frontendURL}/auth/success?token=${token}`);
   }
 );
+
+authRouter.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+
+  if (!user) return res.status(401).json({ message: 'Invalid username' });
+
+  const validPassword = await bcrypt.compare(password, user.password);
+  if (!validPassword) return res.status(401).json({ message: 'Invalid password' });
+
+  const token = jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      isAdmin: user.isAdmin
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN }
+  );
+
+  res.json({ token, user });
+});
 
 authRouter.get("/me", passport.authenticate("jwt", { session: false }), (req, res) => {
   res.json({

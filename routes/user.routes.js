@@ -4,7 +4,7 @@ import { authenticateJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.get("/", authenticateJWT, isAdmin, async (req, res) => {
+router.get("/", async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
@@ -14,13 +14,13 @@ router.get("/:id", authenticateJWT, isAdmin, async (req, res) => {
   res.json(user);
 });
 
-router.post("/", authenticateJWT, isAdmin, async (req, res) => {
+router.post("/", async (req, res) => {
   const newUser = new User(req.body);
   await newUser.save();
   res.status(201).json(newUser);
 });
 
-router.patch("/:id", authenticateJWT, isAdmin, async (req, res) => {
+router.patch("/:id", authenticateJWT, async (req, res) => {
   if (req.params.id !== req.user._id.toString() && !req.user.isAdmin) {
     return res.status(403).json({ message: "You can only update your own profile" });
   }
